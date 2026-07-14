@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:rules": "tsx scripts/test-rules.ts"
+    "test:rules": "tsx scripts/test-rules.ts",
+    "test:lark": "tsx scripts/test-lark-connection.ts"
   },
   "dependencies": {
     "next": "14.2.5",
@@ -19,7 +20,8 @@
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "typescript": "^5.5.3",
-    "tsx": "^4.16.2"
+    "dotenv": "^16.6.1",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
   }
 }
