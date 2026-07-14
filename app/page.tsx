@@ -18,7 +18,9 @@ export default async function Page() {
   );
 
   if (!session) {
-    const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
+    // 去掉结尾多余的斜杠，防止 APP_BASE_URL 填成 "https://xxx.vercel.app/" 时拼出
+    // "https://xxx.vercel.app//api/auth-login" 这种多一个斜杠、跟飞书后台白名单对不上的地址
+    const baseUrl = (process.env.APP_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
     const redirectUri = `${baseUrl}/api/auth-login`;
     redirect(getLarkAuthorizeUrl(redirectUri));
   }
