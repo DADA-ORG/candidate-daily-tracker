@@ -7,6 +7,7 @@ import {
 } from "@/lib/larkMatch";
 import { buildCardForConsultant } from "@/lib/larkCard";
 import { sendCardToOpenId } from "@/lib/larkSend";
+import { verifySessionCookieValue, SESSION_COOKIE_NAME } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,17 @@ function todayLabel(date: Date): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // 即使有人绕过页面直接调用这个接口，也要挡住没登录 / 不在 Admins 名单里的请求
+    const session = verifySessionCookieValue(
+      request.cookies.get(SESSION_COOKIE_NAME)?.value
+    );
+    if (!session) {
+      return NextResponse.json(
+        { error: "未登录或登录已过期，请刷新页面重新用飞书登录。" },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const cvSentFile = formData.get("cvSent");
     const ccmFile = formData.get("ccm");

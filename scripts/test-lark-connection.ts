@@ -13,6 +13,7 @@ import { getTenantAccessToken } from "../lib/larkAuth";
 import {
   fetchConsultantNameToOpenId,
   fetchSampleRecordFields,
+  fetchAdminOpenIds,
 } from "../lib/larkMatch";
 
 async function main() {
@@ -29,11 +30,33 @@ async function main() {
     console.log(`   - ${name} -> ${openId.slice(0, 6)}...`);
   }
 
+  if (process.env.LARK_ADMIN_TABLE_ID) {
+    console.log("\n3) 读取 Admins 白名单表 ...");
+    try {
+      const admins = await fetchAdminOpenIds();
+      console.log(`   ✅ 成功，白名单里有 ${admins.size} 个 open_id`);
+      if (admins.size === 0) {
+        console.log(
+          "   ⚠️  读到了表，但一个 open_id 都没取到。检查 LARK_ADMIN_PERSON_FIELD 是否和表格里的列名完全一致（默认 Person）。"
+        );
+      }
+    } catch (err) {
+      console.log(
+        "   ❌ 读取 Admins 表失败：",
+        err instanceof Error ? err.message : String(err)
+      );
+    }
+  } else {
+    console.log(
+      "\n3) 跳过 Admins 白名单表检查（没配置 LARK_ADMIN_TABLE_ID，登录鉴权功能还用不了）"
+    );
+  }
+
   if (map.size === 0) {
     console.log(
       "\n⚠️  读到了表，但一条 姓名->open_id 都没匹配上。检查 LARK_BITABLE_NAME_FIELD / LARK_BITABLE_USER_FIELD 是否和表格里的列名完全一致。"
     );
-    console.log("\n3) 打印第一条记录的真实字段名和内容，对照一下 ...");
+    console.log("\n4) 打印第一条记录的真实字段名和内容，对照一下 ...");
     const sampleFields = await fetchSampleRecordFields();
     if (sampleFields) {
       console.log("   表格里实际的列名有：", Object.keys(sampleFields));

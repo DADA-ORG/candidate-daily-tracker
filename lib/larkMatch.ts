@@ -141,6 +141,60 @@ export async function fetchConsultantNameToOpenId(): Promise<
 }
 
 /**
+ * 读取"Admins"对照表（同一个 Base 下另一张表），返回允许登录这个工具的所有人的 open_id 集合。
+ * 需要环境变量：LARK_ADMIN_TABLE_ID，以及可选的 LARK_ADMIN_PERSON_FIELD（默认 "Person"）。
+ * 复用同一个 LARK_BITABLE_APP_TOKEN / LARK_WIKI_TOKEN（Admins 表和姓名对照表在同一个 Base 里）。
+ */
+export async function fetchAdminOpenIds(): Promise<Set<string>> {
+  const tableId = process.env.LARK_ADMIN_TABLE_ID;
+  const personField = process.env.LARK_ADMIN_PERSON_FIELD || "Person";
+
+  if (!tableId) {
+    throw new Error(
+      "缺少 LARK_ADMIN_TABLE_ID 环境变量。需要把 Admins 表的 table id 填进 .env，见 README。"
+    );
+  }
+
+  const appToken = await resolveBitableAppToken();
+  const token = await getTenantAccessToken();
+  const openIds = new Set<string>();
+
+  let pageToken: string | undefined;
+  do {
+    const url = new URL(
+      `${getLarkApiBase()}/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records`
+    );
+    url.searchParams.set("page_size", "100");
+    url.searchParams.set("user_id_type", "open_id");
+    if (pageToken) url.searchParams.set("page_token", pageToken);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (data.code !== 0) {
+      throw new Error(`读取 Admins 表失败：${data.msg}`);
+    }
+
+    const records: BitableRecord[] = data.data.items ?? [];
+    for (const record of records) {
+      // Person 字段可能是单人也可能是多人，统一按数组处理，把每个人的 open_id 都加进白名单
+      const value = record.fields[personField];
+      if (Array.isArray(value)) {
+        for (const person of value) {
+          const openId = (person as { id?: string })?.id;
+          if (openId) openIds.add(openId);
+        }
+      }
+    }
+
+    pageToken = data.data.has_more ? data.data.page_token : undefined;
+  } while (pageToken);
+
+  return openIds;
+}
+
+/**
  * 诊断用：只取表里第一条记录的原始字段，用来核对 LARK_BITABLE_NAME_FIELD /
  * LARK_BITABLE_USER_FIELD 有没有跟表格里真实的列名对上。不影响正式的匹配逻辑。
  */
