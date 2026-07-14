@@ -24,19 +24,22 @@ export async function POST(request: NextRequest) {
     const ccmFile = formData.get("ccm");
     const mode = (formData.get("mode") as string) || "preview"; // "preview" | "send"
 
-    if (!(cvSentFile instanceof File) || !(ccmFile instanceof File)) {
+    const hasCvSent = cvSentFile instanceof File;
+    const hasCcm = ccmFile instanceof File;
+
+    if (!hasCvSent && !hasCcm) {
       return NextResponse.json(
-        { error: "请同时上传 CV Sent 表和 CCM 表两个文件。" },
+        { error: "请至少上传 CV Sent 表或 CCM 表其中一个文件。" },
         { status: 400 }
       );
     }
 
-    const cvSentRows = parseExcelToRawRows(
-      Buffer.from(await cvSentFile.arrayBuffer())
-    );
-    const ccmRows = parseExcelToRawRows(
-      Buffer.from(await ccmFile.arrayBuffer())
-    );
+    const cvSentRows = hasCvSent
+      ? parseExcelToRawRows(Buffer.from(await cvSentFile.arrayBuffer()))
+      : [];
+    const ccmRows = hasCcm
+      ? parseExcelToRawRows(Buffer.from(await ccmFile.arrayBuffer()))
+      : [];
 
     const digests = computeConsultantDigests(cvSentRows, ccmRows);
 

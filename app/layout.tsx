@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "候选人每日追踪工具",
+  title: "DADA候选人每日追踪工具",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

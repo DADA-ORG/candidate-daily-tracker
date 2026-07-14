@@ -3,6 +3,11 @@ node_modules
 .env
 .env.local
 *.log
+.DS_Store
+tsconfig.tsbuildinfo
+
+# 拖进 public/ 的原始 logo 文件备份，代码里只引用 public/logo.png
+public/dadaconsultants_pte_ltd_logo*
 
 # 严禁把真实候选人/客户表格或临时验证脚本提交进这个 public 仓库
 scripts/fixtures/real-*
