@@ -1,0 +1,11 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+
+# 严禁把真实候选人/客户表格或临时验证脚本提交进这个 public 仓库
+scripts/fixtures/real-*
+scripts/real-data-check.ts
+*.xlsx
+!scripts/fixtures/sample-*.xlsx
